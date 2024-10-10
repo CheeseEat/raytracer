@@ -1,0 +1,16 @@
+  // Currently you have a camera with some stats
+  // You also are sweeping the screen outputing pixel color values
+  
+  //Need:
+  // get the viewport matrix working
+  // send rays from the camera to the middle of each of the viewport pixel middles - Change to multiple random ones to get anti-alisasing, should be easy to implment and a lot of points... maybe?
+  // Get shapes working where you see if you hit a sphere and if you hit a triangle
+
+  // Then:
+  // materials
+  // lights
+
+  // lots of complicated stuff to get done, espcially when you don't know the language. Feel like I am learning though. I should probably read through the leacture notes and through the textbook a few times
+  // before writing anymore code. So far it is original but anything progressing will be me just ripping it off
+  
+  //Get each of the pixels locations by calculating the delta
