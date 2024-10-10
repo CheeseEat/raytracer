@@ -48,6 +48,7 @@ class metal : public material
     metal(const Vector3& albedo) : albedo(albedo) {}
 
     bool scatter(const Ray& ray_in, const hit_record& rec, Vector3& attenuation, Ray& scattered)
+    const override
     {
       Vector3 reflected = reflect(ray_in.getDirection(), rec.normal);
       scattered = Ray(rec.p, reflected);

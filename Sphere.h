@@ -7,7 +7,7 @@
 class Sphere : public hittable {
 
   public:
-    Sphere(const Vector3& origin, double radius) : origin(origin), radius(std::fmax(0, radius))
+    Sphere(const Vector3& origin, double radius, shared_ptr<material> mat) : origin(origin), radius(std::fmax(0, radius)), mat(mat)
     {
 
     }

@@ -3,13 +3,15 @@
 
 #include "vector3.h"
 #include "color.h"
+#include "material.h"
 
 class Camera {
   public:
     
     double aspect_ratio = 1.0;
     int image_width = 100;
-    int samples_per_pixel = 10;
+    int samples_per_pixel = 20;
+    int max_depth = 10;       // Max ray bounces
 
     const Vector3& getPosition()    const { return position; }
     double getViewport_width()      const { return image_width; }
@@ -42,7 +44,7 @@ class Camera {
             Vector3 ray_direction =  cur_pixel_location - position;
             Ray cur_ray(position, ray_direction);
 
-            pixel_color = pixel_color + ray_color(cur_ray, world);
+            pixel_color = pixel_color + ray_color(cur_ray, max_depth, world);
 
             //Vector3 pixel_color = ray_color(cur_ray);
             
@@ -94,15 +96,27 @@ class Camera {
   
   }
 
-  Vector3 ray_color( const Ray& r, const hittable& world)
+  Vector3 ray_color( const Ray& r, int depth, const hittable& world)
   {
+
+    if(depth <= 0)
+    {
+      return Vector3(0,0,0);
+    }
 
     hit_record rec;
     interval inter(0.001, infinity);
     if(world.hit(r, inter, rec))
     {
+      Ray scattered;
+      Vector3 attenuation;
+      if(rec.mat->scatter(r, rec, attenuation, scattered))
+      {
+        return multiply(attenuation, ray_color(scattered, depth-1, world));
+      }
+
       Vector3 direction = rec.normal + random_unit_vector();
-      return 0.5 * ray_color(Ray(rec.p, direction), world);
+      return 0.5 * ray_color(Ray(rec.p, direction), depth-1, world);
     }
 
     Vector3 unit_dir = getUnit_Vector(r.getDirection());
