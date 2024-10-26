@@ -7,10 +7,7 @@
 class Sphere : public hittable {
 
   public:
-    Sphere(const Vector3& origin, double radius, shared_ptr<material> mat) : origin(origin), radius(std::fmax(0, radius)), mat(mat)
-    {
-
-    }
+    Sphere(const Vector3& origin, double radius, shared_ptr<material> mat) : origin(origin), radius(std::fmax(0, radius)), mat(mat) {}
 
     bool hit (const Ray& r, interval ray_t, hit_record& rec) const override
     {
@@ -30,7 +27,7 @@ class Sphere : public hittable {
       
       // Checking to see if roots are in acceptable range specified by tmin and tmax
       double sqrt_temp = std::sqrt(discriminant);
-      double root = (h - sqrt_temp);
+      double root = (h - sqrt_temp) / a;
       if(!ray_t.surrounds(root))
       {
         root = (h + sqrt_temp) / a;

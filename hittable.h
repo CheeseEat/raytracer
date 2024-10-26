@@ -19,7 +19,7 @@ class hit_record
 
     void set_face_normal(const Ray& r, const Vector3& outward_normal)
     {
-      front_face = r.getDirection() * outward_normal;
+      front_face = r.getDirection() * outward_normal < 0;
       normal = front_face ? outward_normal : -outward_normal;
     }
 

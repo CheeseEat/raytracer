@@ -110,13 +110,16 @@ class Camera {
     {
       Ray scattered;
       Vector3 attenuation;
+
+      // If the material calculates that the ray should bounce off the certain material and create new ray
       if(rec.mat->scatter(r, rec, attenuation, scattered))
       {
         return multiply(attenuation, ray_color(scattered, depth-1, world));
       }
 
-      Vector3 direction = rec.normal + random_unit_vector();
-      return 0.5 * ray_color(Ray(rec.p, direction), depth-1, world);
+      // Vector3 direction = rec.normal + random_unit_vector();
+      // return 0.5 * ray_color(Ray(rec.p, direction), depth-1, world);
+      return Vector3(0,0,0);
     }
 
     Vector3 unit_dir = getUnit_Vector(r.getDirection());
