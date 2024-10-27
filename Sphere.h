@@ -9,10 +9,19 @@ class Sphere : public hittable {
   public:
 
     // Moving Sphere
-    Sphere(const Vector3& center1, const Vector3& center2, double radius, shared_ptr<material> mat) : center(center1, center2 - center1), radius(std::fmax(0,radius)), mat(mat) {}
+    Sphere(const Vector3& center1, const Vector3& center2, double radius, shared_ptr<material> mat) : center(center1, center2 - center1), radius(std::fmax(0,radius)), mat(mat) 
+    {
+      Vector3 rvec = Vector3(radius, radius, radius);
+      aabb box1(center.eqn(0) - rvec, center.eqn(0) + rvec);
+      aabb box2(center.eqn(1) - rvec, center.eqn(1) + rvec);
+    }
 
     // Stationary Sphere
-    Sphere(const Vector3& origin, double radius, shared_ptr<material> mat) : center(origin, Vector3(0,0,0)), radius(std::fmax(0, radius)), mat(mat) {}
+    Sphere(const Vector3& origin, double radius, shared_ptr<material> mat) : center(origin, Vector3(0,0,0)), radius(std::fmax(0, radius)), mat(mat) 
+    {
+      Vector3 rvec = Vector3(radius, radius, radius);
+      bbox = aabb(origin - rvec, origin + rvec);
+    }
  
     bool hit (const Ray& r, interval ray_t, hit_record& rec) const override
     {
@@ -46,13 +55,15 @@ class Sphere : public hittable {
       // Setting where the ray hit the point in hit record
       rec.t = root;
       rec.p = r.eqn(rec.t);
-      Vector3 out_norm = (rec.p - origin) / radius;
+      Vector3 out_norm = (rec.p - curCenter) / radius;
       rec.set_face_normal(r, out_norm);
       rec.mat = mat;
 
       return true;
 
     }
+
+    aabb bounding_box() const override { return bbox; }
   
   private:
 
@@ -60,6 +71,7 @@ class Sphere : public hittable {
     Ray center; // For motion
     double radius;
     shared_ptr<material> mat;
+    aabb bbox;
 
 };
 
