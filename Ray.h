@@ -10,20 +10,22 @@ class Ray {
     
     Ray() {}
     Ray(const Vector3& origin_param, const Vector3& direction_param) : origin(origin_param), direction(direction_param) {}
+    Ray(const Vector3& origin_param, const Vector3& direction_param, double time_param) : origin(origin_param), direction(direction_param), time(time_param) {}
 
     const Vector3& getOrigin()      const { return origin; }
     const Vector3& getDirection()   const { return direction; }
+    double getTime() const { return time; }
 
     Vector3 eqn(double t) const
     {
       return origin + t * direction;
     }
 
-  private:
-    
+  private: 
     Vector3 origin;
     Vector3 direction;
-
+    double time;
+    
 };
 
 #endif 

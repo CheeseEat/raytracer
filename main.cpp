@@ -55,7 +55,7 @@ int main()
 
   std::cout << "correct program" << std::endl;
 
-  int width = 600;
+  int width = 400;
   //int height = 600;
   float aspect_ratio = 16.0/9.0;
   int aa = 70;
@@ -63,20 +63,45 @@ int main()
   Hittable_List world;
 
   auto material_ground = make_shared<lambertian>(Vector3(0.8, 0.8, 0.0));
+  auto material_right  = make_shared<metal>(Vector3(0.8, 0.6, 0.2), 0.8);
   auto material_center = make_shared<lambertian>(Vector3(0.1, 0.2, 0.5));
-  auto material_left   = make_shared<metal>(Vector3(0.8, 0.8, 0.8), 0.3);
-  auto material_right  = make_shared<metal>(Vector3(0.8, 0.6, 0.2), 1.0);
+  auto material_left   = make_shared<dielectric>(1.50);
+  auto material_bubble = make_shared<dielectric>(1.00 / 1.50);
 
   world.add(make_shared<Sphere>(Vector3( 0.0, -100.5, -1.0), 100.0, material_ground));
   world.add(make_shared<Sphere>(Vector3( 0.0,    0.0, -1.2),   0.5, material_center));
   world.add(make_shared<Sphere>(Vector3(-1.0,    0.0, -1.0),   0.5, material_left));
+  world.add(make_shared<Sphere>(Vector3(-1.0,    0.0, -1.0),   0.4, material_bubble));
   world.add(make_shared<Sphere>(Vector3( 1.0,    0.0, -1.0),   0.5, material_right));
+  
+  // auto material_ground = make_shared<lambertian>(Vector3(0.8, 0.8, 0.0));
+  // auto material_center = make_shared<lambertian>(Vector3(0.1, 0.2, 0.5));
+  // auto material_left   = make_shared<dielectric>(1.50);
+  // auto material_bubble = make_shared<dielectric>(1.00 / 1.50);
+  // auto material_right  = make_shared<metal>(Vector3(0.8, 0.6, 0.2), 1.0);
+
+  // world.add(make_shared<Sphere>(Vector3( 0.0, -100.5, -1.0), 100.0, material_ground));
+  // world.add(make_shared<Sphere>(Vector3( 0.0,    0.0, -1.2),   0.5, material_center));
+  // world.add(make_shared<Sphere>(Vector3(-1.0,    0.0, -1.0),   0.5, material_left));
+  // world.add(make_shared<Sphere>(Vector3(-1.0,    0.0, -1.0),   0.4, material_bubble));
+  // world.add(make_shared<Sphere>(Vector3( 1.0,    0.0, -1.0),   0.5, material_right));
+
   //world.add(make_shared<Triangle>(Vector3(0.3, 0.3, 0), Vector3(0.6, 0.4, 0), Vector3(0.5, 0.7, 0)));
 
   //format is r g b \n
   Camera cam (ofs, aa);
   cam.image_width = width;
   cam.aspect_ratio = aspect_ratio;
+  cam.max_depth = 50;
+
+  cam.vfov     = 20;
+  cam.lookfrom = Vector3(-2,2,1);
+  cam.lookat   = Vector3(0,0,-1);
+  cam.vup      = Vector3(0,1,0);
+
+  //cam.defocus_angle = 0.75;
+  cam.focus_dist    = 3.4;
+
   cam.render(world);
 
   ofs.close();

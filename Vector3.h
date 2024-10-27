@@ -19,6 +19,11 @@ class Vector3 {
       return(sqrt(pow(values[0], 2) + pow(values[1], 2) + pow(values[2], 2)));
     }
 
+    double getLengthSquared() const
+    {
+      return(pow(values[0], 2) + pow(values[1], 2) + pow(values[2], 2));
+    }
+
     double operator[](int i) const { return values[i]; }
     double& operator[](int i) { return values[i]; }
 
@@ -129,6 +134,25 @@ inline Vector3 random_on_hemisphere(const Vector3& n)
 inline Vector3 reflect(const Vector3& v, const Vector3& n)
 {
   return v - 2 * (v * n) * n; // A bit confiusing, v*n is dot product, and the second * is scalar multiplication
+}
+
+inline Vector3 refract(const Vector3& uv, const Vector3& n, double etai_over_etat)
+{
+  auto cos_theta = std::fmin((-uv * n), 1.0);
+  Vector3 r_out_perp =  etai_over_etat * (uv + cos_theta*n);
+  Vector3 r_out_parallel = -std::sqrt(std::fabs(1.0 - r_out_perp.getLengthSquared())) * n;
+  return r_out_perp + r_out_parallel;
+}
+
+// Sample random poitn in box -1, 1 and keep sampling untill you land inside the unit circle
+inline Vector3 random_in_unit_disk()
+{
+  while(true)
+  {
+    Vector3 p = Vector3(random_double(-1, 1), random_double(-1, 1), 0);
+    if(p.getLengthSquared() < 1)
+      return p;
+  }
 }
 
 #endif 
