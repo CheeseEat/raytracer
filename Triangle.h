@@ -9,6 +9,7 @@ class Triangle : public hittable {
   public:
     
     Triangle(Vector3 pointA, Vector3 pointB, Vector3 pointC) : a(pointA), b(pointB), c(pointC), n(getUnit_Vector(cross((b - a), (c - a)))) {}
+    Triangle(Vector3 pointA, Vector3 pointB, Vector3 pointC, shared_ptr<material> mat) : Triangle(pointA, pointB, pointC), mat(mat) {}
 
     bool hit (const Ray& r, interval ray_t, hit_record& rec) const override
     {
@@ -56,11 +57,14 @@ class Triangle : public hittable {
 
     }
 
+    aabb bounding_box() const override { return bbox; }
 
   private:
 
     Vector3 a, b, c;
     Vector3 n;  // Normal
+    shared_ptr<material> mat;
+    aabb bbox;
 
 };
 

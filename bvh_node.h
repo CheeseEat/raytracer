@@ -15,7 +15,7 @@ class bvh_node : public hittable {
 
     bvh_node(std::vector<shared_ptr<hittable>>& objects, size_t start, size_t end) {
         
-        int axis = random_int(0,2);
+        int axis = int(random_double(0, 2+1));
 
         auto comparator = (axis == 0) ? box_x_compare
                         : (axis == 1) ? box_y_compare

@@ -16,6 +16,7 @@ class hit_record
     Vector3 normal;
     shared_ptr<material> mat;
     double t;
+    double u, v;          // Texture coordinates
     bool front_face;
 
     void set_face_normal(const Ray& r, const Vector3& outward_normal)
