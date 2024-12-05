@@ -13,6 +13,8 @@ class Triangle : public hittable {
                         uv_a(uvA), uv_b(uvB), uv_c(uvC), n(getUnit_Vector(cross((b - a), (c - a)))), mat(mat) {}
 
     bool hit(const Ray& r, interval ray_t, hit_record& rec) const override {
+      
+      //std::cout << "hit";
 
       // Step 1: Calculate the plane of the triangle
       Vector3 edge1 = b - a;
@@ -54,10 +56,13 @@ class Triangle : public hittable {
           return false;
       }
 
+      Vector3 interpolated_normal = (1 - u - v) * normal_a + u * normal_b + v * normal_c;
+      interpolated_normal = getUnit_Vector(interpolated_normal);
+
       // Step 4: Fill the hit record
       rec.t = t;
       rec.p = r.eqn(t);  // Intersection point
-      rec.set_face_normal(r, n); // Precomputed normal
+      rec.set_face_normal(r, interpolated_normal);
       rec.mat = mat;
 
       rec.u = (1 - u - v) * uv_a.x() + u * uv_b.x() + v * uv_c.x();
@@ -78,6 +83,7 @@ class Triangle : public hittable {
 
     Vector3 a, b, c;
     Vector3 uv_a, uv_b, uv_c; 
+    Vector3 normal_a, normal_b, normal_c;
     Vector3 n;  // Normal
     shared_ptr<material> mat;
     aabb bbox;

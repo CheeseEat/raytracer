@@ -16,6 +16,8 @@
 #include "Color.h"
 #include "Sphere.h"
 #include "Triangle.h"
+#include "TriangleMesh.h"
+#include "ObjectLoader.h"
 
 double dot(const Vector3& v1, const Vector3& v2)
 {
@@ -201,6 +203,22 @@ void checkered_sphere()
 
 }
 
+Vector3 rotate(const Vector3& v, const Vector3& axis, double angle) {
+    double cos_theta = std::cos(angle);
+    double sin_theta = std::sin(angle);
+
+    // Rodrigues' rotation formula
+    return v * cos_theta +
+           cross(axis, v) * sin_theta +
+           axis * (axis * v) * (1 - cos_theta);
+}
+
+void rotate_cube(std::vector<Vector3>& vertices, const Vector3& axis, double angle) {
+    for (auto& vertex : vertices) {
+        vertex = rotate(vertex, axis, angle);
+    }
+}
+
 void yoSoy() {
 
   std::ofstream ofs("output.ppm");
@@ -227,7 +245,7 @@ void yoSoy() {
   cam.max_depth         = 50;
 
   cam.vfov     = 20;
-  cam.lookfrom = Vector3(0,0,6);
+  cam.lookfrom = Vector3(0,0,12);
   cam.lookat   = Vector3(0,0,0);
   cam.vup      = Vector3(0,1,0);
 
@@ -241,6 +259,7 @@ void yoSoy() {
   //   make_shared<lambertian>(text1)));
 
   auto texture2 = make_shared<image_texture>("leon.jpg");
+  auto material_right  = make_shared<metal>(Vector3(0.8, 0.6, 0.2), 0.2);
   auto material2 = make_shared<lambertian>(texture2);
 
   Vector3 a(0, 0, 0); // Triangle vertices
@@ -251,7 +270,48 @@ void yoSoy() {
   Vector3 uv_b(1, 1, 0);
   Vector3 uv_c(0, 1, 1);
 
-  thing.add(make_shared<Triangle>(a, b, c, uv_a, uv_b, uv_c, material2));
+  //thing.add(make_shared<Triangle>(a, b, c, uv_a, uv_b, uv_c, material2));
+
+  // std::vector<Vector3> vertices = {
+  //   Vector3(0, 0, 0),
+  //   Vector3(1, 0, 0),
+  //   Vector3(0, 1, 0),
+  //   Vector3(1, 1, 0)
+  // };
+
+  // std::vector<Vector3> uv_coords = {
+  //     Vector3(0, 0, 0),
+  //     Vector3(1, 0, 0),
+  //     Vector3(0, 1, 0),
+  //     Vector3(1, 1, 0)
+  // };
+
+  // std::vector<int> indices = {
+  //     0, 1, 2, // First triangle
+  //     1, 3, 2  // Second triangle
+  // };
+ 
+  std::vector<Vector3> vertices;
+  std::vector<Vector3> uv_coords;
+  std::vector<int> indices;
+
+  if (!load_obj("test.obj", vertices, indices, uv_coords)) {
+      std::cerr << "Failed to load OBJ file." << std::endl;
+      return;
+  }
+
+  rotate_cube(vertices, Vector3(0, 1, 0), degrees_radians(45));
+
+  std::cout << "Loaded OBJ file successfully!" << std::endl;
+  std::cout << "Vertices: " << vertices.size() << ", Indices: " << indices.size() << std::endl;
+
+  auto material = make_shared<lambertian>(texture2);
+  auto metal_material = make_shared<metal>(Vector3(0.8, 0.8, 0.8), 0.04); // Shiny metal
+
+  auto mesh = make_shared<TriangleMesh>(vertices, uv_coords, indices, metal_material);
+  thing.add(make_shared<Sphere>(Vector3( 0.0, -100.5, -1.0), 100.0, material));
+  thing.add(mesh);
+  //thing.add(make_shared<Sphere>(Vector3( 0.0, 0, 0), 1.0, metal_material));
 
   //cam.render(Hittable_List(globe));
   cam.render(thing);

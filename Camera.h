@@ -33,6 +33,9 @@ class Camera {
 
       initialize();
 
+      int total_pixels = image_width * image_height;
+      int processed_pixels = 0;
+
       for(int h = 0; h < image_height; h++)
       {
         p[1] = (h / (double) image_height);
@@ -70,6 +73,13 @@ class Camera {
 
           pixel_color = pixel_color / aa;
           write_color(ofs, pixel_color);
+          
+          processed_pixels++;
+          if (processed_pixels % (total_pixels / 100) == 0) {
+              int progress = (processed_pixels * 100) / total_pixels;
+              std::cout << "\rProgress: " << progress << "%";
+              std::cout.flush();
+          }
 
         }
       }
