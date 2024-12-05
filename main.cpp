@@ -210,17 +210,13 @@ void yoSoy() {
   }
 
   Hittable_List thing;
-  
-  Vector3 a(1, 0, 0);
-  Vector3 b(0, 1, 0);
-  Vector3 c(0, 0, 1);
 
   auto texture = make_shared<image_texture>("yoSoy.jpg");
   auto surface = make_shared<lambertian>(texture);
   auto text1  = make_shared<solid_color>(255, 255, 255);
-  auto surface2 = make_shared<lambertian>(text1);
+  //auto surface2 = make_shared<lambertian>(text1);
   auto globe = make_shared<Sphere>(Vector3(0,0,0), 2, surface);
-  auto tri  = make_shared<Triangle>(a, b, c, surface2);
+  //auto tri  = make_shared<Triangle>(a, b, c, surface2);
   
   int aa = 30;
   Camera cam(ofs, aa);
@@ -238,11 +234,24 @@ void yoSoy() {
   cam.defocus_angle = 0;
 
   //thing.add(globe);
-  thing.add(make_shared<Triangle>(
-    Vector3(0.3, 0.3, 0),
-    Vector3(0.6, 0.4, 0),
-    Vector3(0.5, 0.7, 0),
-    make_shared<lambertian>(text1)));
+  // thing.add(make_shared<Triangle>(
+  //   Vector3(0.3, 0.3, 0),
+  //   Vector3(0.6, 0.4, 0),
+  //   Vector3(0.5, 0.7, 0),
+  //   make_shared<lambertian>(text1)));
+
+  auto texture2 = make_shared<image_texture>("leon.jpg");
+  auto material2 = make_shared<lambertian>(texture2);
+
+  Vector3 a(0, 0, 0); // Triangle vertices
+  Vector3 b(1, 0, 0);
+  Vector3 c(0, 1, 0);
+
+  Vector3 uv_a(0, 0, 0); // UV coordinates
+  Vector3 uv_b(1, 1, 0);
+  Vector3 uv_c(0, 1, 1);
+
+  thing.add(make_shared<Triangle>(a, b, c, uv_a, uv_b, uv_c, material2));
 
   //cam.render(Hittable_List(globe));
   cam.render(thing);
