@@ -50,6 +50,24 @@ class Vector3 {
     double values[3];
 };
 
+inline Vector3 min(const Vector3& v1, const Vector3& v2)
+{
+  return Vector3(
+            std::fmin(v1.x(), v2.x()),
+            std::fmin(v1.y(), v2.y()),
+            std::fmin(v1.z(), v2.z())
+        );
+}
+
+inline Vector3 max(const Vector3& v1, const Vector3& v2)
+{
+  return Vector3(
+            std::fmax(v1.x(), v2.x()),
+            std::fmax(v1.y(), v2.y()),
+            std::fmax(v1.z(), v2.z())
+        );
+}
+
 inline Vector3 multiply(const Vector3& first, const Vector3& second)
 {
   return Vector3(first.x() * second.x(), first.y() * second.y(), first.z() * second.z());

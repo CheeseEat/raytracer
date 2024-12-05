@@ -9,59 +9,75 @@ class Triangle : public hittable {
   public:
     
     Triangle(Vector3 pointA, Vector3 pointB, Vector3 pointC) : a(pointA), b(pointB), c(pointC), n(getUnit_Vector(cross((b - a), (c - a)))) {}
-    Triangle(Vector3 pointA, Vector3 pointB, Vector3 pointC, shared_ptr<material> mat) : Triangle(pointA, pointB, pointC), mat(mat) {}
+    Triangle(Vector3 pointA, Vector3 pointB, Vector3 pointC, const Vector3& uvA, const Vector3& uvB, const Vector3& uvC, shared_ptr<material> mat) : a(pointA), b(pointB), c(pointC), 
+                        uv_a(uvA), uv_b(uvB), uv_c(uvC), n(getUnit_Vector(cross((b - a), (c - a)))), mat(mat) {}
 
-    bool hit (const Ray& r, interval ray_t, hit_record& rec) const override
-    {
+    bool hit(const Ray& r, interval ray_t, hit_record& rec) const override {
 
-      Vector3 n, na, nb, nc;
-      Vector3 bary;
-      Vector3 d1, d2;
-      Vector3 p, q;
+      // Step 1: Calculate the plane of the triangle
+      Vector3 edge1 = b - a;
+      Vector3 edge2 = c - a;
+      Vector3 h = cross(r.getDirection(), edge2);
+      double det = edge1 * h;
+      Vector3 normal = getUnit_Vector(cross(edge1, edge2));
+      //std::cout << "Edge1: " << edge1.getLength() << ", Edge2: " << edge2.getLength() << ", Normal: " << normal.getLength() << "\n";
 
-      // p and q never intialized 
+      // If det is near zero, the ray is parallel to the triangle
+      if (std::fabs(det) < 1e-8) {
+            //std::cout << "MAMAM";
+          return false;
+      }
+      double inv_det = 1.0 / det;
 
-      //na = (c - b) x (p - b)
-      d1 = c - b;
-      d2 = q - b;
-      na = cross(d1, d2);
-      //nb = (a - c) x (p - c)
-      d1 = a - c;
-      d2 = q - c;
-      nb = cross(d1, d2);
-      //nc = (b - a) x (p - a)
-      d1 = b - a;
-      d2 = q - a;
-      nc = cross(d1, d2);
-
-      bary[0] = (n * na) / (n * n);
-      bary[1] = (n * nb) / (n * n);
-      bary[2] = (n * nc) / (n * n);
-
-      // If we remove the test, triangles will tessellate the plane 
-      if (bary[0] < 0 || bary[1] < 0 || bary[2] < 0) {
-        return false;
+      // Step 2: Solve for barycentric coordinates
+      Vector3 tvec = r.getOrigin() - a;
+      double u = (tvec * h) * inv_det;
+      if (u < 0.0 || u > 1.0) {
+        //std::cout << "d1";
+          return false;
       }
 
-      Vector3 temp = bary - r.getOrigin();
-      double t = (temp * r.getDirection()) / (r.getDirection() * r.getDirection());
+      //std::cout << a.x() << " " << a.y() << " " << c.z() << " ";
+      //std::cout << r.getOrigin().x() << " " << r.getOrigin().y() << " " << r.getOrigin().z() << " ";
 
+      Vector3 qvec = cross(tvec, edge1);
+      double v = (r.getDirection() * qvec) * inv_det;
+      if (v < 0.0 || u + v > 1.0) {
+        //std::cout << "d2";
+          return false;
+      }
+
+      // Step 3: Solve for t (intersection distance along ray)
+      double t = (edge2 * qvec) * inv_det;
+      if (!ray_t.surrounds(t)) {
+          //std::cout << "d3";
+          return false;
+      }
+
+      // Step 4: Fill the hit record
       rec.t = t;
-      rec.p = r.eqn(t);
-      Vector3 out_norm = cross((b - a), (c - a));
-      rec.set_face_normal(r, out_norm);
+      rec.p = r.eqn(t);  // Intersection point
+      rec.set_face_normal(r, n); // Precomputed normal
+      rec.mat = mat;
 
-      std::cout << "thats a hit";
+      rec.u = (1 - u - v) * uv_a.x() + u * uv_b.x() + v * uv_c.x();
+      rec.v = (1 - u - v) * uv_a.y() + u * uv_b.y() + v * uv_c.y();
 
+      //std::cout << "Triangle hit\n";
       return true;
-
     }
 
-    aabb bounding_box() const override { return bbox; }
+
+    aabb bounding_box() const override {
+        Vector3 min_point = min(a, min(b, c));
+        Vector3 max_point = max(a, max(b, c));
+        return aabb(min_point, max_point);
+    }
 
   private:
 
     Vector3 a, b, c;
+    Vector3 uv_a, uv_b, uv_c; 
     Vector3 n;  // Normal
     shared_ptr<material> mat;
     aabb bbox;
@@ -69,5 +85,3 @@ class Triangle : public hittable {
 };
 
 #endif
-
-
