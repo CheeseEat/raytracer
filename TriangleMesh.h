@@ -13,8 +13,9 @@ class TriangleMesh : public hittable {
     TriangleMesh(const std::vector<Vector3>& vertices,
                  const std::vector<Vector3>& uv_coords,
                  const std::vector<int>& indices,
+                 const std::vector<Vector3>& normals,
                  shared_ptr<material> mat)
-        : vertices(vertices), uv_coords(uv_coords), indices(indices), mat(mat) {std::cout << "let there be light";}
+        : vertices(vertices), uv_coords(uv_coords), indices(indices), normals(normals), mat(mat) {std::cout << "let there be light";}
 
     bool hit(const Ray& r, interval ray_t, hit_record& rec) const override {
         bool hit_anything = false;
@@ -25,23 +26,19 @@ class TriangleMesh : public hittable {
             Vector3 b = vertices[indices[i + 1]];
             Vector3 c = vertices[indices[i + 2]];
 
-            Vector3 uv_a;
-            Vector3 uv_b;
-            Vector3 uv_c;
-            if(uv_coords.size() > 0)
-            {
-              uv_a = uv_coords[indices[i]];
-              uv_b = uv_coords[indices[i + 1]];
-              uv_c = uv_coords[indices[i + 2]];
-            }
-            else
-            {
-              uv_a = Vector3(0, 0, 0);
-              uv_b = Vector3(1, 0, 0);
-              uv_c = Vector3(0, 1, 0);
-            }
+           // Vertex normals
+            Vector3 normal_a = normals.empty() ? Vector3(0, 0, 0) : normals[indices[i]];
+            Vector3 normal_b = normals.empty() ? Vector3(0, 0, 0) : normals[indices[i + 1]];
+            Vector3 normal_c = normals.empty() ? Vector3(0, 0, 0) : normals[indices[i + 2]];
 
-            Triangle triangle(a, b, c, uv_a, uv_b, uv_c, mat);
+            
+
+            // UV coordinates (fallback to zero if missing)
+            Vector3 uv_a = uv_coords.empty() ? Vector3(0, 0, 0) : uv_coords[indices[i]];
+            Vector3 uv_b = uv_coords.empty() ? Vector3(0, 0, 0) : uv_coords[indices[i + 1]];
+            Vector3 uv_c = uv_coords.empty() ? Vector3(0, 0, 0) : uv_coords[indices[i + 2]];
+
+            Triangle triangle(a, b, c, uv_a, uv_b, uv_c, normal_a, normal_b, normal_c, mat);
             //std::cout << "triangle created";
             if (triangle.hit(r, ray_t, temp_rec)) {
                 hit_anything = true;
@@ -92,6 +89,7 @@ class TriangleMesh : public hittable {
     std::vector<Vector3> vertices;
     std::vector<Vector3> uv_coords;
     std::vector<int> indices;
+    std::vector<Vector3> normals;
     shared_ptr<material> mat;
 };
 

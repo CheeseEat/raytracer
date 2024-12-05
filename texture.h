@@ -4,6 +4,7 @@
 #include "Vector3.h"
 #include "rtw_image.h"
 #include "interval.h"
+#include "perlin.h"
 
 class texture
 {
@@ -76,6 +77,19 @@ class image_texture : public texture
   private:
     rtw_image image;
 
+};
+
+class noise_texture : public texture {
+  public:
+    noise_texture(double scale) : scale(scale) {}
+
+    Vector3 value(double u, double v, const Vector3& p) const override {
+      return Vector3(.5, .5, .5) * (1 + std::sin(scale * p.z() + 10 * noise.turb(p, 7)));
+    }
+
+  private:
+    perlin noise;
+    double scale;
 };
 
 #endif

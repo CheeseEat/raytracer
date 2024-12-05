@@ -9,8 +9,8 @@ class Triangle : public hittable {
   public:
     
     Triangle(Vector3 pointA, Vector3 pointB, Vector3 pointC) : a(pointA), b(pointB), c(pointC), n(getUnit_Vector(cross((b - a), (c - a)))) {}
-    Triangle(Vector3 pointA, Vector3 pointB, Vector3 pointC, const Vector3& uvA, const Vector3& uvB, const Vector3& uvC, shared_ptr<material> mat) : a(pointA), b(pointB), c(pointC), 
-                        uv_a(uvA), uv_b(uvB), uv_c(uvC), n(getUnit_Vector(cross((b - a), (c - a)))), mat(mat) {}
+    Triangle(Vector3 pointA, Vector3 pointB, Vector3 pointC, const Vector3& uvA, const Vector3& uvB, const Vector3& uvC, Vector3 normalA, Vector3 normalB, Vector3 normalC, shared_ptr<material> mat) : a(pointA), b(pointB), c(pointC), 
+                        uv_a(uvA), uv_b(uvB), uv_c(uvC), normal_a(normalA), normal_b(normalB), normal_c(normalC), n(getUnit_Vector(cross((b - a), (c - a)))), mat(mat) {}
 
     bool hit(const Ray& r, interval ray_t, hit_record& rec) const override {
       
@@ -58,6 +58,11 @@ class Triangle : public hittable {
 
       Vector3 interpolated_normal = (1 - u - v) * normal_a + u * normal_b + v * normal_c;
       interpolated_normal = getUnit_Vector(interpolated_normal);
+
+      std::cout << "Interpolated Normal: "
+          << interpolated_normal.x() << ", "
+          << interpolated_normal.y() << ", "
+          << interpolated_normal.z() << std::endl;
 
       // Step 4: Fill the hit record
       rec.t = t;

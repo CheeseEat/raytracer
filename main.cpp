@@ -294,23 +294,28 @@ void yoSoy() {
   std::vector<Vector3> vertices;
   std::vector<Vector3> uv_coords;
   std::vector<int> indices;
+  std::vector<Vector3> normals;
 
-  if (!load_obj("test.obj", vertices, indices, uv_coords)) {
+  if (!load_obj("test.obj", vertices, indices, uv_coords, normals)) {
       std::cerr << "Failed to load OBJ file." << std::endl;
       return;
   }
 
-  rotate_cube(vertices, Vector3(0, 1, 0), degrees_radians(45));
+  //rotate_cube(vertices, Vector3(0, 1, 0), degrees_radians(45));
 
   std::cout << "Loaded OBJ file successfully!" << std::endl;
   std::cout << "Vertices: " << vertices.size() << ", Indices: " << indices.size() << std::endl;
 
   auto material = make_shared<lambertian>(texture2);
-  auto metal_material = make_shared<metal>(Vector3(0.8, 0.8, 0.8), 0.04); // Shiny metal
+  auto metal_material = make_shared<metal>(Vector3(0.8, 0.8, 0.8), 0.01); // Shiny metal
+  auto checker = make_shared<checkered>(0.32, Vector3(.2, .3, .1), Vector3(.9, .9, .9));
+  auto mesh = make_shared<TriangleMesh>(vertices, uv_coords, indices, normals, metal_material);
+   auto pertext = make_shared<noise_texture>(4);
 
-  auto mesh = make_shared<TriangleMesh>(vertices, uv_coords, indices, metal_material);
-  thing.add(make_shared<Sphere>(Vector3( 0.0, -100.5, -1.0), 100.0, material));
-  thing.add(mesh);
+  thing.add(make_shared<Sphere>(Vector3( 0.0, -100.5, -1.0), 100.0, make_shared<lambertian>(checker)));
+  thing.add(make_shared<Sphere>(Vector3( 0.0, 0.0, 0.0), 1.0, make_shared<lambertian>(pertext)));
+  //thing.add(mesh);
+
   //thing.add(make_shared<Sphere>(Vector3( 0.0, 0, 0), 1.0, metal_material));
 
   //cam.render(Hittable_List(globe));

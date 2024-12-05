@@ -7,7 +7,7 @@
 #include "external/tiny_obj_loader.h"
 #include "Vector2.h"
 
-bool load_obj(const std::string& filename, std::vector<Vector3>& vertices, std::vector<int>& indices, std::vector<Vector3>& uv_coords) {
+bool load_obj(const std::string& filename, std::vector<Vector3>& vertices, std::vector<int>& indices, std::vector<Vector3>& uv_coords, std::vector<Vector3>& normals) {
     tinyobj::attrib_t attrib; std::vector<tinyobj::shape_t> shapes; std::vector<tinyobj::material_t> materials;
 
     std::string warn, err;
@@ -26,12 +26,14 @@ bool load_obj(const std::string& filename, std::vector<Vector3>& vertices, std::
         );
     }
 
-    for (size_t i = 0; i < attrib.normals.size(); i += 3) {
-      vertex_normals.emplace_back(
-          attrib.normals[i + 0],
-          attrib.normals[i + 1],
-          attrib.normals[i + 2]
-      );
+    if (!attrib.normals.empty()) {
+      for (size_t i = 0; i < attrib.normals.size(); i += 3) {
+          normals.emplace_back(
+              attrib.normals[i + 0],
+              attrib.normals[i + 1],
+              attrib.normals[i + 2]
+          );
+      }
     }
 
     //Extract indices and UV coordinates
@@ -48,6 +50,38 @@ bool load_obj(const std::string& filename, std::vector<Vector3>& vertices, std::
                 );
             }
         }
+    }
+
+    if (normals.empty()) {
+        normals.resize(vertices.size(), Vector3(0, 0, 0));
+
+        for (const auto& shape : shapes) {
+            for (size_t i = 0; i < shape.mesh.indices.size(); i += 3) {
+                int idx0 = shape.mesh.indices[i + 0].vertex_index;
+                int idx1 = shape.mesh.indices[i + 1].vertex_index;
+                int idx2 = shape.mesh.indices[i + 2].vertex_index;
+
+                Vector3 v0 = vertices[idx0];
+                Vector3 v1 = vertices[idx1];
+                Vector3 v2 = vertices[idx2];
+
+                // Compute the face normal
+                Vector3 edge1 = v1 - v0;
+                Vector3 edge2 = v2 - v0;
+                Vector3 face_normal = getUnit_Vector(cross(edge1, edge2));
+
+                // Add the face normal to each vertex normal
+                normals[idx0] = normals[idx0] + face_normal;
+                normals[idx1] = normals[idx1] + face_normal;
+                normals[idx2] = normals[idx2] + face_normal;
+            }
+        }
+
+        // Normalize all vertex normals
+        for (auto& normal : normals) {
+            normal = getUnit_Vector(normal);
+        }
+        
     }
 
     return true;
