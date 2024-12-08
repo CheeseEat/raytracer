@@ -368,12 +368,14 @@ void simple_light() {
     auto text2  = make_shared<solid_color>(1.0, 0.1, 0.7);
     auto texture2 = make_shared<image_texture>("yoSoy.jpg");
     world.add(make_shared<Sphere>(Vector3(0,-1000,0), 1000, make_shared<lambertian>(text1)));
-    world.add(make_shared<Sphere>(Vector3(0,2,0), 2, make_shared<lambertian>(texture2)));
+    shared_ptr<hittable> soy = make_shared<Sphere>(Vector3(0,2,0), 2.2, make_shared<lambertian>(texture2));
+    soy = make_shared<rotate_y>(soy, -30);
+    world.add(soy);
 
     auto difflight = make_shared<diffuse_light>(Vector3(4,4,4));
     world.add(make_shared<quad>(Vector3(3,1,-2), Vector3(2,0,0), Vector3(0,2,0), difflight));
 
-    int aa      = 40;
+    int aa      = 70;
     Camera cam(ofs,aa);
     cam.aspect_ratio       = 16/9.0;
     cam.image_width       = 400;
@@ -385,6 +387,16 @@ void simple_light() {
     cam.lookfrom = Vector3(30,3,6);
     cam.lookat   = Vector3(0,2,0);
     cam.vup      = Vector3(0,1,0);
+
+    shared_ptr<hittable> Sam = make_shared<Sphere>(Vector3(2,2,3), 2, make_shared<lambertian>(text1));
+    //Sam = make_shared<rotate_y>(Sam, 15);
+    Sam = make_shared<translate>(Sam, Vector3(2,2,2));
+    world.add(Sam);
+
+    shared_ptr<hittable> Joe = make_shared<Sphere>(Vector3(5,-10,-2), 4, make_shared<lambertian>(text1));
+    //Joe = make_shared<rotate_y>(Joe, -18);
+    Joe = make_shared<translate>(Joe, Vector3(2,2,2));
+    world.add(Joe);
 
     cam.defocus_angle = 0;
 
