@@ -18,6 +18,7 @@
 #include "Triangle.h"
 #include "TriangleMesh.h"
 #include "ObjectLoader.h"
+#include "quad.h"
 
 double dot(const Vector3& v1, const Vector3& v2)
 {
@@ -239,15 +240,26 @@ void yoSoy() {
   int aa = 30;
   Camera cam(ofs, aa);
 
-  cam.aspect_ratio      = 16.0 / 9.0;
-  cam.image_width       = 400;
-  cam.samples_per_pixel = 100;
-  cam.max_depth         = 50;
+//   cam.aspect_ratio      = 16.0 / 9.0;
+//   cam.image_width       = 400;
+//   cam.samples_per_pixel = 100;
+//   cam.max_depth         = 50;
 
-  cam.vfov     = 20;
-  cam.lookfrom = Vector3(0,0,12);
-  cam.lookat   = Vector3(0,0,0);
-  cam.vup      = Vector3(0,1,0);
+//   cam.vfov     = 20;
+//   cam.lookfrom = Vector3(0,0,12);
+//   cam.lookat   = Vector3(0,0,0);
+//   cam.vup      = Vector3(0,1,0);
+
+    cam.aspect_ratio      = 16.0 / 9.0;
+    cam.image_width       = 400;
+    cam.samples_per_pixel = 100;
+    cam.max_depth         = 50;
+
+    cam.vfov     = 80;
+    cam.lookfrom = Vector3(0,0,9);
+    cam.lookat   = Vector3(0,0,0);
+    cam.vup      = Vector3(0,1,0);
+
 
   cam.defocus_angle = 0;
 
@@ -261,6 +273,7 @@ void yoSoy() {
   auto texture2 = make_shared<image_texture>("leon.jpg");
   auto material_right  = make_shared<metal>(Vector3(0.8, 0.6, 0.2), 0.2);
   auto material2 = make_shared<lambertian>(texture2);
+  cam.background        = Vector3(0.70, 0.80, 1.00);
 
   Vector3 a(0, 0, 0); // Triangle vertices
   Vector3 b(1, 0, 0);
@@ -312,14 +325,72 @@ void yoSoy() {
   auto mesh = make_shared<TriangleMesh>(vertices, uv_coords, indices, normals, metal_material);
    auto pertext = make_shared<noise_texture>(4);
 
-  thing.add(make_shared<Sphere>(Vector3( 0.0, -100.5, -1.0), 100.0, make_shared<lambertian>(checker)));
-  thing.add(make_shared<Sphere>(Vector3( 0.0, 0.0, 0.0), 1.0, make_shared<lambertian>(pertext)));
+  //thing.add(make_shared<Sphere>(Vector3( 0.0, -100.5, -1.0), 100.0, make_shared<lambertian>(checker)));
+  //thing.add(make_shared<Sphere>(Vector3( 0.0, 0.0, 0.0), 1.0, make_shared<lambertian>(pertext)));
   //thing.add(mesh);
 
   //thing.add(make_shared<Sphere>(Vector3( 0.0, 0, 0), 1.0, metal_material));
 
+    auto left_red     = make_shared<lambertian>(Vector3(1.0, 0.2, 0.2));
+    auto back_green   = make_shared<lambertian>(Vector3(0.2, 1.0, 0.2));
+    auto right_blue   = make_shared<lambertian>(Vector3(0.2, 0.2, 1.0));
+    auto upper_orange = make_shared<lambertian>(Vector3(1.0, 0.5, 0.0));
+    auto lower_teal   = make_shared<lambertian>(Vector3(0.2, 0.8, 0.8));
+
+    // Quads
+    thing.add(make_shared<quad>(Vector3(-3,-2, 5), Vector3(0, 0,-4), Vector3(0, 4, 0), left_red));
+    thing.add(make_shared<quad>(Vector3(-2,-2, 0), Vector3(4, 0, 0), Vector3(0, 4, 0), back_green));
+    thing.add(make_shared<quad>(Vector3( 3,-2, 1), Vector3(0, 0, 4), Vector3(0, 4, 0), right_blue));
+    thing.add(make_shared<quad>(Vector3(-2, 3, 1), Vector3(4, 0, 0), Vector3(0, 0, 4), upper_orange));
+    thing.add(make_shared<quad>(Vector3(-2,-3, 5), Vector3(4, 0, 0), Vector3(0, 0,-4), lower_teal));
+
   //cam.render(Hittable_List(globe));
-  cam.render(thing);
+    cam.render(thing);
+
+    ofs.close();
+
+}
+
+void simple_light() {
+
+    std::ofstream ofs("output.ppm");
+    if (!ofs) {
+        std::cerr << "Error opening file for writing!" << std::endl;
+        //return -1;
+    }
+
+    Hittable_List world;
+
+    auto pertext = make_shared<noise_texture>(4);
+    // world.add(make_shared<Sphere>(Vector3(0,-1000,0), 1000, make_shared<lambertian>(pertext)));
+    // world.add(make_shared<Sphere>(Vector3(0,2,0), 2, make_shared<lambertian>(pertext)));
+    auto text1  = make_shared<solid_color>(1.0, 0.2, 0.2);
+    auto text2  = make_shared<solid_color>(1.0, 0.1, 0.7);
+    auto texture2 = make_shared<image_texture>("yoSoy.jpg");
+    world.add(make_shared<Sphere>(Vector3(0,-1000,0), 1000, make_shared<lambertian>(text1)));
+    world.add(make_shared<Sphere>(Vector3(0,2,0), 2, make_shared<lambertian>(texture2)));
+
+    auto difflight = make_shared<diffuse_light>(Vector3(4,4,4));
+    world.add(make_shared<quad>(Vector3(3,1,-2), Vector3(2,0,0), Vector3(0,2,0), difflight));
+
+    int aa      = 40;
+    Camera cam(ofs,aa);
+    cam.aspect_ratio       = 16/9.0;
+    cam.image_width       = 400;
+    cam.samples_per_pixel = 400;
+    cam.max_depth         = 50;
+    cam.background        = Vector3(0.0, 0.0, 0.0);
+
+    cam.vfov     = 20;
+    cam.lookfrom = Vector3(30,3,6);
+    cam.lookat   = Vector3(0,2,0);
+    cam.vup      = Vector3(0,1,0);
+
+    cam.defocus_angle = 0;
+
+    cam.render(world);
+
+    ofs.close();
 
 }
 
@@ -327,7 +398,8 @@ void yoSoy() {
 int main()
 {
   
-  yoSoy();
+   //yoSoy();
+    simple_light();
 
   std::cout << "done";
 

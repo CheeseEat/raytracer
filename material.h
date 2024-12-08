@@ -17,6 +17,10 @@ class material
       return false;
     }
 
+    virtual Vector3 emitted(double u, double v, const Vector3& p) const {
+        return Vector3(0,0,0);
+    }
+
 };
 
 class lambertian : public material
@@ -101,6 +105,19 @@ class dielectric : public material
         return r0 + (1-r0)*std::pow((1 - cosine),5);
     }
     
+};
+
+class diffuse_light : public material {
+  public:
+    diffuse_light(shared_ptr<texture> tex) : tex(tex) {}
+    diffuse_light(const Vector3& emit) : tex(make_shared<solid_color>(emit)) {}
+
+    Vector3 emitted(double u, double v, const Vector3& p) const override {
+        return tex->value(u, v, p);
+    }
+
+  private:
+    shared_ptr<texture> tex;
 };
 
 #endif

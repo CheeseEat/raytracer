@@ -12,6 +12,7 @@ class Camera {
     int image_width = 100;
     int samples_per_pixel = 20;
     int max_depth = 10;       // Max ray bounces
+    Vector3 background; // This is the background
 
     double vfov = 90;  // Vertical view angle (field of view)
     Vector3 lookfrom = Vector3(0,0,0);   // Point camera is looking from
@@ -155,26 +156,40 @@ class Camera {
     }
 
     hit_record rec;
-    interval inter(0.001, infinity);
-    if(world.hit(r, inter, rec))
-    {
-      Ray scattered;
-      Vector3 attenuation;
+    // interval inter(0.001, infinity);
+    // if(world.hit(r, inter, rec))
+    // {
+    //   Ray scattered;
+    //   Vector3 attenuation;
 
-      // If the material calculates that the ray should bounce off the certain material and create new ray
-      if(rec.mat->scatter(r, rec, attenuation, scattered))
-      {
-        return multiply(attenuation, ray_color(scattered, depth-1, world));
-      }
+    //   // If the material calculates that the ray should bounce off the certain material and create new ray
+    //   if(rec.mat->scatter(r, rec, attenuation, scattered))
+    //   {
+    //     return multiply(attenuation, ray_color(scattered, depth-1, world));
+    //   }
 
-      // Vector3 direction = rec.normal + random_unit_vector();
-      // return 0.5 * ray_color(Ray(rec.p, direction), depth-1, world);
-      return Vector3(0,0,0);
-    }
+    //   // Vector3 direction = rec.normal + random_unit_vector();
+    //   // return 0.5 * ray_color(Ray(rec.p, direction), depth-1, world);
+    //   return Vector3(0,0,0);
+    // }
 
-    Vector3 unit_dir = getUnit_Vector(r.getDirection());
-    auto a = 0.5 * (unit_dir.y() + 1.0);
-    return (1.0-a) * Vector3(1.0, 1.0, 1.0) + a*Vector3(0.5, 0.7, 1.0);
+    // Vector3 unit_dir = getUnit_Vector(r.getDirection());
+    // auto a = 0.5 * (unit_dir.y() + 1.0);
+    // return (1.0-a) * Vector3(1.0, 1.0, 1.0) + a*Vector3(0.5, 0.7, 1.0);
+    // If the ray hits nothing, return the background color.
+    if (!world.hit(r, interval(0.001, infinity), rec))
+        return background;
+
+    Ray scattered;
+    Vector3 attenuation;
+    Vector3 color_from_emission = rec.mat->emitted(rec.u, rec.v, rec.p);
+
+    if (!rec.mat->scatter(r, rec, attenuation, scattered))
+        return color_from_emission;
+
+    Vector3 color_from_scatter = multiply(attenuation, ray_color(scattered, depth-1, world));
+
+    return color_from_emission + color_from_scatter;
     
   }
 

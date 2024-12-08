@@ -49,4 +49,8 @@ class interval {
 const interval interval::empty    = interval(+infinity, -infinity);
 const interval interval::universe = interval(-infinity, +infinity);
 
+inline interval operator+(const interval& inte, double offset) {
+    return interval(inte.min + offset, inte.max + offset);
+}
+
 #endif
