@@ -19,6 +19,7 @@
 #include "TriangleMesh.h"
 #include "ObjectLoader.h"
 #include "quad.h"
+#include "constant_medium.h"
 
 double dot(const Vector3& v1, const Vector3& v2)
 {
@@ -366,10 +367,13 @@ void simple_light() {
     // world.add(make_shared<Sphere>(Vector3(0,2,0), 2, make_shared<lambertian>(pertext)));
     auto text1  = make_shared<solid_color>(1.0, 0.2, 0.2);
     auto text2  = make_shared<solid_color>(1.0, 0.1, 0.7);
+    auto white = make_shared<lambertian>(Vector3(.73, .73, .73));
     auto texture2 = make_shared<image_texture>("yoSoy.jpg");
     world.add(make_shared<Sphere>(Vector3(0,-1000,0), 1000, make_shared<lambertian>(text1)));
-    shared_ptr<hittable> soy = make_shared<Sphere>(Vector3(0,2,0), 2.2, make_shared<lambertian>(texture2));
-    soy = make_shared<rotate_y>(soy, -30);
+    shared_ptr<hittable> soy = make_shared<Sphere>(Vector3(0,2,0), 2.2, white);
+    //shared_ptr<constant_medium> sammy = make_shared<constant_medium>(soy, 0.0001, Vector3(1,1,1));
+
+    //soy = make_shared<rotate_y>(soy, -30);
     world.add(soy);
 
     auto difflight = make_shared<diffuse_light>(Vector3(4,4,4));
@@ -381,7 +385,7 @@ void simple_light() {
     cam.image_width       = 400;
     cam.samples_per_pixel = 400;
     cam.max_depth         = 50;
-    cam.background        = Vector3(0.0, 0.0, 0.0);
+    cam.background        = Vector3(0.0, 0.0, 0.00);
 
     cam.vfov     = 20;
     cam.lookfrom = Vector3(30,3,6);
@@ -390,13 +394,17 @@ void simple_light() {
 
     shared_ptr<hittable> Sam = make_shared<Sphere>(Vector3(2,2,3), 2, make_shared<lambertian>(text1));
     //Sam = make_shared<rotate_y>(Sam, 15);
-    Sam = make_shared<translate>(Sam, Vector3(2,2,2));
-    world.add(Sam);
+    //Sam = make_shared<translate>(Sam, Vector3(2,2,2));
+    //world.add(Sam);
 
     shared_ptr<hittable> Joe = make_shared<Sphere>(Vector3(5,-10,-2), 4, make_shared<lambertian>(text1));
     //Joe = make_shared<rotate_y>(Joe, -18);
     Joe = make_shared<translate>(Joe, Vector3(2,2,2));
-    world.add(Joe);
+    //world.add(Joe);
+    //shared_ptr<constant_medium> sammy = make_shared<constant_medium>(Sam, 0.01, Vector3(0,0,0));
+
+    world.add(soy);
+    //world.add(make_shared<constant_medium>(make_shared<Sphere>(Vector3(5,-10,-2), 4, make_shared<lambertian>(text1));, 0.01, color(1,1,1)));
 
     cam.defocus_angle = 0;
 

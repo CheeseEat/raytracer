@@ -21,6 +21,11 @@ class material
         return Vector3(0,0,0);
     }
 
+    virtual double scattering_pdf(const Ray& r_in, const hit_record& rec, const Ray& scattered)
+    const {
+        return 0;
+    }
+
 };
 
 class lambertian : public material
@@ -32,7 +37,7 @@ class lambertian : public material
     bool scatter(const Ray& ray_in, const hit_record& rec, Vector3& attenuation, Ray& scattered)
     const override
     {
-      auto scatter_dir = rec.normal + random_unit_vector();
+      auto scatter_dir = random_on_hemisphere(rec.normal);
 
       if(scatter_dir.near_zero())
       {
@@ -42,7 +47,14 @@ class lambertian : public material
       scattered = Ray(rec.p, scatter_dir, ray_in.getTime());
       attenuation = tex->value(rec.u, rec.v, rec.p);
       return true;
-    } 
+    }
+
+    double scattering_pdf(const Ray& r_in, const hit_record& rec, const Ray& scattered)
+    const override {
+        auto cos_theta = (rec.normal * getUnit_Vector(scattered.getDirection()));
+        return cos_theta < 0 ? 0 : cos_theta/pi;
+        //return 1 / (2*pi);
+    }
 
   private:
     shared_ptr<texture> tex;
@@ -114,6 +126,22 @@ class diffuse_light : public material {
 
     Vector3 emitted(double u, double v, const Vector3& p) const override {
         return tex->value(u, v, p);
+    }
+
+  private:
+    shared_ptr<texture> tex;
+};
+
+class isotropic : public material {
+  public:
+    isotropic(const Vector3& albedo) : tex(make_shared<solid_color>(albedo)) {}
+    isotropic(shared_ptr<texture> tex) : tex(tex) {}
+
+    bool scatter(const Ray& r_in, const hit_record& rec, Vector3& attenuation, Ray& scattered)
+    const override {
+        scattered = Ray(rec.p, random_unit_vector(), r_in.getTime());
+        attenuation = tex->value(rec.u, rec.v, rec.p);
+        return true;
     }
 
   private:

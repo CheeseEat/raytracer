@@ -187,7 +187,10 @@ class Camera {
     if (!rec.mat->scatter(r, rec, attenuation, scattered))
         return color_from_emission;
 
-    Vector3 color_from_scatter = multiply(attenuation, ray_color(scattered, depth-1, world));
+    double scattering_pdf = rec.mat->scattering_pdf(r, rec, scattered);
+    double pdf_value = scattering_pdf;
+
+    Vector3 color_from_scatter = (scattering_pdf * multiply(attenuation, ray_color(scattered, depth-1, world))) / pdf_value;
 
     return color_from_emission + color_from_scatter;
     
