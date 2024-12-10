@@ -54,14 +54,32 @@ class rtw_image
     int width() const {return(fdata == nullptr) ? 0 : image_width;}
     int height() const {return (fdata == nullptr) ? 0 : image_height;}
 
-    const unsigned char* pixel_data(int x, int y) const{
-      static unsigned char magenta[] = {255, 0, 255};
-      if(bdata == nullptr) return magenta;
+    const float* pixel_data(int x, int y) const {
+        static float magenta[] = {1.0f, 0.0f, 1.0f};
+        if (!fdata) return magenta;
 
-      x = clamp(x, 0, image_width);
-      y = clamp(y, 0, image_height);
+        x = clamp(x, 0, image_width - 1);
+        y = clamp(y, 0, image_height - 1);
 
-      return bdata + y*bytes_per_scanline + x*bytes_per_pixel;
+        return &fdata[(y * image_width + x) * desired_channels];
+    }
+
+    // const unsigned char* pixel_data(int x, int y) const{
+    //   static unsigned char magenta[] = {255, 0, 255};
+    //   if(bdata == nullptr) return magenta;
+
+    //   x = clamp(x, 0, image_width);
+    //   y = clamp(y, 0, image_height);
+
+    //   return bdata + y*bytes_per_scanline + x*bytes_per_pixel;
+    // }
+
+    void apply_exposure(float exposure) {
+        if (!fdata) return;
+
+        for (int i = 0; i < image_width * image_height * desired_channels; ++i) {
+            fdata[i] = fdata[i] * std::pow(2.0f, exposure);
+        }
     }
   
   private:
@@ -71,6 +89,7 @@ class rtw_image
     int image_width = 0;
     int image_height = 0;
     int bytes_per_scanline = 0;
+    static constexpr int desired_channels = 3;
 
     static int clamp(int x, int low, int high)
     {

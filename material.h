@@ -21,10 +21,10 @@ class material
         return Vector3(0,0,0);
     }
 
-    virtual double scattering_pdf(const Ray& r_in, const hit_record& rec, const Ray& scattered)
-    const {
-        return 0;
-    }
+    // virtual double scattering_pdf(const Ray& r_in, const hit_record& rec, const Ray& scattered)
+    // const {
+    //     return 0;
+    // }
 
 };
 
@@ -37,7 +37,8 @@ class lambertian : public material
     bool scatter(const Ray& ray_in, const hit_record& rec, Vector3& attenuation, Ray& scattered)
     const override
     {
-      auto scatter_dir = random_on_hemisphere(rec.normal);
+      //auto scatter_dir = random_on_hemisphere(rec.normal);
+      auto scatter_dir = rec.normal + random_unit_vector();
 
       if(scatter_dir.near_zero())
       {
@@ -49,12 +50,12 @@ class lambertian : public material
       return true;
     }
 
-    double scattering_pdf(const Ray& r_in, const hit_record& rec, const Ray& scattered)
-    const override {
-        auto cos_theta = (rec.normal * getUnit_Vector(scattered.getDirection()));
-        return cos_theta < 0 ? 0 : cos_theta/pi;
-        //return 1 / (2*pi);
-    }
+    // double scattering_pdf(const Ray& r_in, const hit_record& rec, const Ray& scattered)
+    // const override {
+    //     auto cos_theta = (rec.normal * getUnit_Vector(scattered.getDirection()));
+    //     return cos_theta < 0 ? 0 : cos_theta/pi;
+    //     //return 1 / (2*pi);
+    // }
 
   private:
     shared_ptr<texture> tex;

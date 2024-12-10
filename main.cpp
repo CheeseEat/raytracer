@@ -369,15 +369,16 @@ void simple_light() {
     auto text2  = make_shared<solid_color>(1.0, 0.1, 0.7);
     auto white = make_shared<lambertian>(Vector3(.73, .73, .73));
     auto texture2 = make_shared<image_texture>("yoSoy.jpg");
+    auto texture3 = make_shared<image_texture>("hdr_image.hdr");
     world.add(make_shared<Sphere>(Vector3(0,-1000,0), 1000, make_shared<lambertian>(text1)));
-    shared_ptr<hittable> soy = make_shared<Sphere>(Vector3(0,2,0), 2.2, white);
+    shared_ptr<hittable> soy = make_shared<Sphere>(Vector3(0,2,0), 5, make_shared<lambertian>(texture3));
     //shared_ptr<constant_medium> sammy = make_shared<constant_medium>(soy, 0.0001, Vector3(1,1,1));
 
     //soy = make_shared<rotate_y>(soy, -30);
     world.add(soy);
 
     auto difflight = make_shared<diffuse_light>(Vector3(4,4,4));
-    world.add(make_shared<quad>(Vector3(3,1,-2), Vector3(2,0,0), Vector3(0,2,0), difflight));
+    //world.add(make_shared<quad>(Vector3(3,1,-2), Vector3(2,0,0), Vector3(0,2,0), difflight));
 
     int aa      = 70;
     Camera cam(ofs,aa);
@@ -385,7 +386,7 @@ void simple_light() {
     cam.image_width       = 400;
     cam.samples_per_pixel = 400;
     cam.max_depth         = 50;
-    cam.background        = Vector3(0.0, 0.0, 0.00);
+    cam.background        = Vector3(0.70, 0.80, 1.00);
 
     cam.vfov     = 20;
     cam.lookfrom = Vector3(30,3,6);
@@ -414,12 +415,80 @@ void simple_light() {
 
 }
 
+void hdr_rectangles_and_metal_sphere() {
+    // Output file for the rendered image
+    std::ofstream ofs("output.ppm");
+    if (!ofs) {
+        std::cerr << "Error opening file for writing!" << std::endl;
+        return;
+    }
+
+    // World objects
+    Hittable_List world;
+
+    // Load the HDR image as a texture
+    auto soy_text = make_shared<image_texture>("leon.jpg");
+    soy_text->apply_exposure(1.0f);
+    auto soy = make_shared<lambertian>(soy_text);
+    auto hdr_texture = make_shared<image_texture>("hdr_image.hdr");
+    auto hdr_material = make_shared<lambertian>(hdr_texture);
+    hdr_texture->apply_exposure(1.0f);
+
+    // Define a metallic sphere in the center
+    auto metal_material = make_shared<metal>(Vector3(0.8, 0.8, 0.8), 0.01);
+    world.add(make_shared<Sphere>(Vector3(0, 1, 0), 1.0, metal_material));
+    auto pertext = make_shared<noise_texture>(4);
+    world.add(make_shared<Sphere>(Vector3(0,-1000,0), 1000, make_shared<lambertian>(pertext)));
+
+    // Adjusted quad positions for HDR background
+    auto size = 10.0; // Rectangle size (extend to surround the scene)
+    auto depth = 15.0; // Depth from the center
+
+    // Back (behind the sphere)
+    world.add(make_shared<quad>(
+        Vector3(-size, -size, -depth), Vector3(2 * size, 0, 0), Vector3(0, 2 * size, 0), soy));
+    
+    // Front (far enough behind the camera to avoid blocking)
+    world.add(make_shared<quad>(
+        Vector3(-size, -size, depth), Vector3(2 * size, 0, 0), Vector3(0, 2 * size, 0), soy));
+    
+    // Left
+    world.add(make_shared<quad>(
+        Vector3(-depth, -size, -size), Vector3(0, 2 * size, 0), Vector3(0, 0, 2 * size), soy));
+    
+    // Right
+    world.add(make_shared<quad>(
+        Vector3(depth, -size, -size), Vector3(0, 2 * size, 0), Vector3(0, 0, 2 * size), soy));
+
+    // Camera setup
+    int aa = 100; // Anti-aliasing samples
+    Camera cam(ofs, aa);
+
+    cam.aspect_ratio      = 16.0 / 9.0;
+    cam.image_width       = 400;
+    cam.samples_per_pixel = 100;
+    cam.max_depth         = 50;
+    cam.background        = Vector3(0.70, 0.80, 1.00);
+
+    cam.vfov     = 45;
+    cam.lookfrom = Vector3(0, 0, 3);
+    cam.lookat   = Vector3(0, 0, 0);
+    cam.vup      = Vector3(0, 1, 0);
+
+    // Render the scene
+    cam.render(world);
+
+    ofs.close();
+}
+
+
 
 int main()
 {
   
    //yoSoy();
-    simple_light();
+    //simple_light();
+    hdr_rectangles_and_metal_sphere();
 
   std::cout << "done";
 
