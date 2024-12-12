@@ -31,15 +31,12 @@ class TriangleMesh : public hittable {
             Vector3 normal_b = normals.empty() ? Vector3(0, 0, 0) : normals[indices[i + 1]];
             Vector3 normal_c = normals.empty() ? Vector3(0, 0, 0) : normals[indices[i + 2]];
 
-            
-
             // UV coordinates (fallback to zero if missing)
             Vector3 uv_a = uv_coords.empty() ? Vector3(0, 0, 0) : uv_coords[indices[i]];
             Vector3 uv_b = uv_coords.empty() ? Vector3(0, 0, 0) : uv_coords[indices[i + 1]];
             Vector3 uv_c = uv_coords.empty() ? Vector3(0, 0, 0) : uv_coords[indices[i + 2]];
 
             Triangle triangle(a, b, c, uv_a, uv_b, uv_c, normal_a, normal_b, normal_c, mat);
-            //std::cout << "triangle created";
             if (triangle.hit(r, ray_t, temp_rec)) {
                 hit_anything = true;
                 ray_t = interval(ray_t.min, temp_rec.t); // Update the interval

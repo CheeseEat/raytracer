@@ -43,9 +43,9 @@ class Camera {
           for(int i = 0; i < aa; i++)
           {
 
-            Vector3 offset = sample_square();  // Get random offset in [-0.5, 0.5] range
-            q[0] = w + (offset[0] / image_width);  // Apply horizontal jitter
-            q[1] = h + (offset[1] / image_height); // Apply vertical jitter
+            Vector3 offset = sample_square(); 
+            q[0] = w + (offset[0] / image_width);  
+            q[1] = h + (offset[1] / image_height); 
 
             //Send out raysence between the camera's position and the targeted pixels location
             Vector3 cur_pixel_location = leftmost_pixel + (q[0] * pixel_delta_u) + (q[1] * pixel_delta_v);
@@ -61,10 +61,6 @@ class Camera {
           }
           pixel_color = pixel_color / aa;
           framebuffer[h * image_width + w] = pixel_color;
-          // {
-          //       std::lock_guard<std::mutex> lock(write_mutex);
-          //       write_color(ofs, pixel_color);
-          // }
           
           processed_pixels++;
           if (processed_pixels % (total_pixels / 100) == 0) {
@@ -179,31 +175,6 @@ class Camera {
   Vector3 ray_color( const Ray& r, int depth, const hittable& world, const cube_map_texture& cube_map)
   {
 
-    // if(depth <= 0)
-    // {
-    //   return Vector3(0,0,0);
-    // }
-
-    // hit_record rec;
-  
-    // if (!world.hit(r, interval(0.001, infinity), rec))
-    //     return background;
-
-    // Ray scattered;
-    // Vector3 attenuation;
-    // Vector3 color_from_emission = rec.mat->emitted(rec.u, rec.v, rec.p);
-
-    // if (!rec.mat->scatter(r, rec, attenuation, scattered))
-    //     return color_from_emission;
-
-    // Vector3 color_from_scatter = multiply(attenuation, ray_color(scattered, depth-1, world));
-    // // double scattering_pdf = rec.mat->scattering_pdf(r, rec, scattered);
-    // // double pdf_value = scattering_pdf;
-
-    // // Vector3 color_from_scatter = (scattering_pdf * multiply(attenuation, ray_color(scattered, depth-1, world))) / pdf_value;
-
-    // return color_from_emission + color_from_scatter;
-
     if (depth <= 0)
       return Vector3(0, 0, 0); // No light is gathered
 
@@ -214,10 +185,7 @@ class Camera {
         Ray scattered;
         Vector3 attenuation;
         Vector3 color_from_emission = rec.mat->emitted(rec.u, rec.v, rec.p);
-        // if (rec.mat->scatter(r, rec, attenuation, scattered)) {
-        //     return multiply(attenuation, ray_color(scattered, depth - 1, world, cube_map));
-        // }
-        // return Vector3(0, 0, 0); // Absorbed
+ 
         if (rec.mat->scatter(r, rec, attenuation, scattered)) {
             double scattering_pdf = rec.mat->scattering_pdf(r, rec, scattered);
 

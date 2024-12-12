@@ -33,7 +33,6 @@ class Hittable_List : public hittable
       bool hit_anything = false;
       auto closest_so_far = ray_t.max;
 
-      // Need to change this to do accerelration strategy, this is going through each of the objects need to do log with object boxes
       for(const auto& object : objects)
       {
         if(object->hit(r, interval(ray_t.min, closest_so_far), temp_rec))

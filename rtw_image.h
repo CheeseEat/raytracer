@@ -64,16 +64,6 @@ class rtw_image
         return &fdata[(y * image_width + x) * desired_channels];
     }
 
-    // const unsigned char* pixel_data(int x, int y) const{
-    //   static unsigned char magenta[] = {255, 0, 255};
-    //   if(bdata == nullptr) return magenta;
-
-    //   x = clamp(x, 0, image_width);
-    //   y = clamp(y, 0, image_height);
-
-    //   return bdata + y*bytes_per_scanline + x*bytes_per_pixel;
-    // }
-
     void apply_exposure(float exposure) {
         if (!fdata) return;
 
