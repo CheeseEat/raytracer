@@ -58,12 +58,7 @@ class Triangle : public hittable {
 
       Vector3 interpolated_normal = (1 - u - v) * normal_a + u * normal_b + v * normal_c;
       interpolated_normal = getUnit_Vector(interpolated_normal);
-
-      std::cout << "Interpolated Normal: "
-          << interpolated_normal.x() << ", "
-          << interpolated_normal.y() << ", "
-          << interpolated_normal.z() << std::endl;
-
+      
       // Step 4: Fill the hit record
       rec.t = t;
       rec.p = r.eqn(t);  // Intersection point

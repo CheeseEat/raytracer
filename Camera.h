@@ -4,6 +4,9 @@
 #include "vector3.h"
 #include "color.h"
 #include "material.h"
+#include <thread>
+#include <mutex>
+std::mutex write_mutex;
 
 class Camera {
   public:
@@ -27,29 +30,18 @@ class Camera {
     double getViewport_height()     const { return image_height; }
     double getAspect_ratio()        const { return aspect_ratio; }
 
-    Camera(std::ofstream& ofs, int aa) : ofs(ofs), aa(aa) {}
+    Camera(std::ofstream& ofs, int aa, const cube_map_texture& cube_map) : ofs(ofs), aa(aa), cube_map(cube_map) {}
 
-    void render(const hittable& world)
+    void render_section(int start_r, int end_r, const hittable& world, std::vector<Vector3>& framebuffer)
     {
-
-      initialize();
-
-      int total_pixels = image_width * image_height;
-      int processed_pixels = 0;
-
-      for(int h = 0; h < image_height; h++)
+      for(int h = start_r; h < end_r; h++)
       {
-        p[1] = (h / (double) image_height);
         for(int w = 0; w < image_width; w++)
         {
-          p[0] = (w / (double) image_width);
           Vector3 pixel_color(0,0,0);
+          Vector3 q;
           for(int i = 0; i < aa; i++)
-          { 
-            // float r_x = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-            // float r_y = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
-            // q[0] = w + r_x * (1.0 / image_width);  // Apply horizontal jitter
-            // q[1] = h + r_y * (1.0 / image_height); // Apply vertical jitter
+          {
 
             Vector3 offset = sample_square();  // Get random offset in [-0.5, 0.5] range
             q[0] = w + (offset[0] / image_width);  // Apply horizontal jitter
@@ -65,15 +57,14 @@ class Camera {
             double ray_time = random_double();
             Ray cur_ray(position, ray_direction, ray_time);
 
-            pixel_color = pixel_color + ray_color(cur_ray, max_depth, world);
-
-            //Vector3 pixel_color = ray_color(cur_ray);
-            
-            //Vector3 pixel_color = Vector3(double(w)/(width-1), double(h)/(height-1), 0);
+            pixel_color = pixel_color + ray_color(cur_ray, max_depth, world, cube_map);
           }
-
           pixel_color = pixel_color / aa;
-          write_color(ofs, pixel_color);
+          framebuffer[h * image_width + w] = pixel_color;
+          // {
+          //       std::lock_guard<std::mutex> lock(write_mutex);
+          //       write_color(ofs, pixel_color);
+          // }
           
           processed_pixels++;
           if (processed_pixels % (total_pixels / 100) == 0) {
@@ -81,20 +72,56 @@ class Camera {
               std::cout << "\rProgress: " << progress << "%";
               std::cout.flush();
           }
-
         }
       }
+    }
+
+    void render(const hittable& world, int num_threads)
+    {
+
+      initialize();
+      
+      std::vector<Vector3> framebuffer(image_width * image_height);
+
+      // int columns_per_thread = (image_width + num_threads - 1) / num_threads;
+      int rows_per_thread = (image_height + num_threads - 1) / num_threads;
+      std::vector<std::thread> threads;
+      threads.reserve(num_threads);
+
+      for (int j = 0; j < num_threads; j++) {
+          int start_col = j * rows_per_thread;
+          int end_col = std::min(start_col + rows_per_thread, image_height); 
+
+          if (start_col >= image_width) break; 
+
+          threads.emplace_back(&Camera::render_section, this, start_col, end_col, std::ref(world), std::ref(framebuffer));
+      }
+
+      for (auto& thread : threads) {
+          thread.join();
+      }
+
+      for (int h = 0; h < image_height; h++) {
+        for (int w = 0; w < image_width; w++) {
+            write_color(ofs, framebuffer[h * image_width + w]);
+        }
+      }
+
+      std::cout << std::endl << "Processed Pixels: " << processed_pixels << " / " << (image_width * image_height) << std::endl;
+      
     }
 
   private:
     
     int image_height;
-    Vector3 position; 
+    int total_pixels;
+    int processed_pixels = 0;
+    Vector3 position;
+    const cube_map_texture& cube_map;
     double pixel_samples_scale;
     Vector3 leftmost_pixel;
     Vector3 pixel_delta_u;
     Vector3 pixel_delta_v;
-    Vector3 p, q;
     Vector3 u, v, w;              // Camera frame basis vectors
     std::ofstream& ofs;
     int aa;                       // Antialisaing value
@@ -109,6 +136,8 @@ class Camera {
   void initialize() {
     image_height = int(image_width / aspect_ratio);
     image_height = (image_height < 1) ? 1 : image_height;
+    total_pixels = image_height * image_width;
+    processed_pixels = 0;
 
     ofs << "P3\n"; // P3 for colors in ASCII
     ofs << image_width << " " << image_height << "\n"; // Determine image size
@@ -147,54 +176,65 @@ class Camera {
   
   }
 
-  Vector3 ray_color( const Ray& r, int depth, const hittable& world)
+  Vector3 ray_color( const Ray& r, int depth, const hittable& world, const cube_map_texture& cube_map)
   {
 
-    if(depth <= 0)
-    {
-      return Vector3(0,0,0);
-    }
-
-    hit_record rec;
-    // interval inter(0.001, infinity);
-    // if(world.hit(r, inter, rec))
+    // if(depth <= 0)
     // {
-    //   Ray scattered;
-    //   Vector3 attenuation;
-
-    //   // If the material calculates that the ray should bounce off the certain material and create new ray
-    //   if(rec.mat->scatter(r, rec, attenuation, scattered))
-    //   {
-    //     return multiply(attenuation, ray_color(scattered, depth-1, world));
-    //   }
-
-    //   // Vector3 direction = rec.normal + random_unit_vector();
-    //   // return 0.5 * ray_color(Ray(rec.p, direction), depth-1, world);
     //   return Vector3(0,0,0);
     // }
 
-    // Vector3 unit_dir = getUnit_Vector(r.getDirection());
-    // auto a = 0.5 * (unit_dir.y() + 1.0);
-    // return (1.0-a) * Vector3(1.0, 1.0, 1.0) + a*Vector3(0.5, 0.7, 1.0);
-    // If the ray hits nothing, return the background color.
-    if (!world.hit(r, interval(0.001, infinity), rec))
-        return background;
+    // hit_record rec;
+  
+    // if (!world.hit(r, interval(0.001, infinity), rec))
+    //     return background;
 
-    Ray scattered;
-    Vector3 attenuation;
-    Vector3 color_from_emission = rec.mat->emitted(rec.u, rec.v, rec.p);
+    // Ray scattered;
+    // Vector3 attenuation;
+    // Vector3 color_from_emission = rec.mat->emitted(rec.u, rec.v, rec.p);
 
-    if (!rec.mat->scatter(r, rec, attenuation, scattered))
+    // if (!rec.mat->scatter(r, rec, attenuation, scattered))
+    //     return color_from_emission;
+
+    // Vector3 color_from_scatter = multiply(attenuation, ray_color(scattered, depth-1, world));
+    // // double scattering_pdf = rec.mat->scattering_pdf(r, rec, scattered);
+    // // double pdf_value = scattering_pdf;
+
+    // // Vector3 color_from_scatter = (scattering_pdf * multiply(attenuation, ray_color(scattered, depth-1, world))) / pdf_value;
+
+    // return color_from_emission + color_from_scatter;
+
+    if (depth <= 0)
+      return Vector3(0, 0, 0); // No light is gathered
+
+    hit_record rec;
+
+    // If the ray hits an object, calculate the color
+    if (world.hit(r, interval(0.001, infinity), rec)) {
+        Ray scattered;
+        Vector3 attenuation;
+        Vector3 color_from_emission = rec.mat->emitted(rec.u, rec.v, rec.p);
+        // if (rec.mat->scatter(r, rec, attenuation, scattered)) {
+        //     return multiply(attenuation, ray_color(scattered, depth - 1, world, cube_map));
+        // }
+        // return Vector3(0, 0, 0); // Absorbed
+        if (rec.mat->scatter(r, rec, attenuation, scattered)) {
+            double scattering_pdf = rec.mat->scattering_pdf(r, rec, scattered);
+
+            if (scattering_pdf > 0) {
+                double pdf_value = scattering_pdf;
+                Vector3 color_from_scatter = multiply(attenuation, ray_color(scattered, depth - 1, world, cube_map) * scattering_pdf) / pdf_value;
+
+                return color_from_emission + color_from_scatter;
+            }
+        }
         return color_from_emission;
+    }
 
-    Vector3 color_from_scatter = multiply(attenuation, ray_color(scattered, depth-1, world));
-    // double scattering_pdf = rec.mat->scattering_pdf(r, rec, scattered);
-    // double pdf_value = scattering_pdf;
+    // If the ray hits nothing, sample from the cube map
+    Vector3 environment_light = cube_map.value(0, 0, getUnit_Vector(r.getDirection())) * 1.5;
+    return environment_light;
 
-    // Vector3 color_from_scatter = (scattering_pdf * multiply(attenuation, ray_color(scattered, depth-1, world))) / pdf_value;
-
-    return color_from_emission + color_from_scatter;
-    
   }
 
   Vector3 defocus_disk_sample() const {

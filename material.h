@@ -21,10 +21,10 @@ class material
         return Vector3(0,0,0);
     }
 
-    // virtual double scattering_pdf(const Ray& r_in, const hit_record& rec, const Ray& scattered)
-    // const {
-    //     return 0;
-    // }
+    virtual double scattering_pdf(const Ray& r_in, const hit_record& rec, const Ray& scattered)
+    const {
+        return 0;
+    }
 
 };
 
@@ -33,6 +33,8 @@ class lambertian : public material
   public:
     lambertian(const Vector3& albedo) : tex(make_shared<solid_color>(albedo)) {}
     lambertian(shared_ptr<texture> tex) : tex(tex) {}
+
+    bool importance_sampling = true;
 
     bool scatter(const Ray& ray_in, const hit_record& rec, Vector3& attenuation, Ray& scattered)
     const override
@@ -50,12 +52,18 @@ class lambertian : public material
       return true;
     }
 
-    // double scattering_pdf(const Ray& r_in, const hit_record& rec, const Ray& scattered)
-    // const override {
-    //     auto cos_theta = (rec.normal * getUnit_Vector(scattered.getDirection()));
-    //     return cos_theta < 0 ? 0 : cos_theta/pi;
-    //     //return 1 / (2*pi);
-    // }
+    double scattering_pdf(const Ray& r_in, const hit_record& rec, const Ray& scattered)
+    const override {
+      if(importance_sampling)
+      {
+        auto cos_theta = (rec.normal * getUnit_Vector(scattered.getDirection()));
+        return 1 / (2*pi);
+      }
+      else
+      {
+        return 0;
+      }
+    }
 
   private:
     shared_ptr<texture> tex;
@@ -74,7 +82,11 @@ class metal : public material
       scattered = Ray(rec.p, reflected, ray_in.getTime());
       attenuation = albedo;
       return (scattered.getDirection() * rec.normal) > 0;
-    } 
+    }
+
+    double scattering_pdf(const Ray& r_in, const hit_record& rec, const Ray& scattered) const override {
+        return 1.0; // Default to uniform probability
+    }
 
   private:
     Vector3 albedo;
@@ -107,6 +119,10 @@ class dielectric : public material
       scattered = Ray(rec.p, direction, r_in.getTime());
       return true;
 
+    }
+
+    double scattering_pdf(const Ray& r_in, const hit_record& rec, const Ray& scattered) const override {
+        return 1.0; // Default to uniform probability
     }
   
   private:
@@ -143,6 +159,10 @@ class isotropic : public material {
         scattered = Ray(rec.p, random_unit_vector(), r_in.getTime());
         attenuation = tex->value(rec.u, rec.v, rec.p);
         return true;
+    }
+
+    double scattering_pdf(const Ray& r_in, const hit_record& rec, const Ray& scattered) const override {
+        return 1.0; // Default to uniform probability
     }
 
   private:

@@ -1,0 +1,26 @@
+# Simple Pyramid with Normals
+o Pyramid
+
+# Vertices
+v  0  1  0    # Top vertex
+v -1  0 -1    # Bottom-left front
+v  1  0 -1    # Bottom-right front
+v  1  0  1    # Bottom-right back
+v -1  0  1    # Bottom-left back
+
+# Normals
+vn  0  1  0   # Upwards (top vertex normal)
+vn  0 -1  0   # Downwards (base normal)
+vn -1  1 -1   # Slope left-front
+vn  1  1 -1   # Slope right-front
+vn  1  1  1   # Slope right-back
+vn -1  1  1   # Slope left-back
+
+# Faces
+f 1//3 2//3 3//3   # Front triangle
+f 1//4 3//4 4//4   # Right triangle
+f 1//5 4//5 5//5   # Back triangle
+f 1//6 5//6 2//6   # Left triangle
+
+f 2//2 3//2 4//2   # Base (front-right)
+f 2//2 4//2 5//2   # Base (left-back)

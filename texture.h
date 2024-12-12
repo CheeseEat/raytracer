@@ -102,4 +102,47 @@ class noise_texture : public texture {
     double scale;
 };
 
+class cube_map_texture : public texture {
+public:
+    cube_map_texture(const char* posx, const char* negx,
+                     const char* posy, const char* negy,
+                     const char* posz, const char* negz) {
+        faces[0] = std::make_shared<image_texture>(posx); // Positive X
+        faces[1] = std::make_shared<image_texture>(negx); // Negative X
+        faces[2] = std::make_shared<image_texture>(posy); // Positive Y
+        faces[3] = std::make_shared<image_texture>(negy); // Negative Y
+        faces[4] = std::make_shared<image_texture>(posz); // Positive Z
+        faces[5] = std::make_shared<image_texture>(negz); // Negative Z
+    }
+
+    Vector3 value(double u, double v, const Vector3& dir) const override {
+        double abs_x = fabs(dir.x()), abs_y = fabs(dir.y()), abs_z = fabs(dir.z());
+        int face_idx;
+        double u_coord, v_coord;
+
+        if (abs_x >= abs_y && abs_x >= abs_z) {
+            // X-dominant
+            face_idx = (dir.x() > 0) ? 0 : 1; // Positive or negative X
+            u_coord = (dir.z() / abs_x + 1.0) * 0.5;
+            v_coord = (dir.y() / abs_x + 1.0) * 0.5;
+        } else if (abs_y >= abs_x && abs_y >= abs_z) {
+            // Y-dominant
+            face_idx = (dir.y() > 0) ? 2 : 3; // Positive or negative Y
+            u_coord = (dir.x() / abs_y + 1.0) * 0.5;
+            v_coord = (dir.z() / abs_y + 1.0) * 0.5;
+        } else {
+            // Z-dominant
+            face_idx = (dir.z() > 0) ? 4 : 5; // Positive or negative Z
+            u_coord = (dir.x() / abs_z + 1.0) * 0.5;
+            v_coord = (dir.y() / abs_z + 1.0) * 0.5;
+        }
+
+        // Sample the correct face
+        return faces[face_idx]->value(u_coord, v_coord, dir);
+    }
+
+private:
+    std::shared_ptr<image_texture> faces[6];
+};
+
 #endif
